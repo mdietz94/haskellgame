@@ -80,7 +80,7 @@ loop = do
 
     player <- getPlayer
     camera <- getCamera
-    let newPlayer = P.update keyState [(Geo.Rectangle (-20) 10 100 20)] player
+    let newPlayer = P.update keyState [(Geo.Rectangle (-20) 20 100 20)] player
     putPlayer newPlayer
 
     putKeyboardState $ IH.putLastKeyboardState keyState
