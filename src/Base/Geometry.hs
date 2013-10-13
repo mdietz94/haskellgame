@@ -1,4 +1,4 @@
-module HaskellGame.Geometry where
+module Base.Geometry where
 
 data Shape = Rectangle { rectX :: Int, rectY :: Int, rectW :: Int, rectH :: Int } | Line { start :: (Int,Int), end :: (Int,Int) }
 	| Point { ptX :: Int, ptY :: Int } deriving (Eq,Show)

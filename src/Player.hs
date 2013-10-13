@@ -1,8 +1,8 @@
-module HaskellGame.Player where
+module Player where
 
-import HaskellGame.GraphicsManager
-import HaskellGame.InputHandler
-import HaskellGame.Geometry
+import Base.GraphicsManager
+import Base.InputHandler
+import Base.Geometry
 import Graphics.UI.SDL (SDLKey(..))
 
 data Player = Player { bounding :: Shape, velocity :: (Int,Int), alive :: Bool } deriving Show
