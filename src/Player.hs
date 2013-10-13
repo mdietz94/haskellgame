@@ -12,16 +12,16 @@ playerHeight = 10
 playerWidth = 5
 
 initialize :: (Int,Int) -> Player
-initialize (x,y) = Player (Rectangle x y playerWidth playerHeight) (0,0) True (loadImage "dot.bmp" Nothing)
+initialize (x,y) = Player (Rectangle x y playerWidth playerHeight) (0,2) True (loadImage "dot.bmp" Nothing)
 
 update :: KeyboardState -> [Shape] -> Player -> Player
-update kS rects player@(Player _ (dx,dy) _  _) = if isOnGround && (isPressed kS SDLK_UP) then player5 { velocity=(dx',-10) } else player5
+update kS rects player@(Player _ (dx,dy) _  _) = if isOnGround && (isPressed kS SDLK_UP) then player5 { velocity=(dx',-5) } else player5
     where
         (player5@(Player _ (dx',dy') _ _),isOnGround) = checkCollisionV rects player4
         player4 = moveV player3
         player3 = checkCollisionH rects player2
         player2 = moveH player1
-        player1 = player { velocity=(dx+strafe,dy+2) }
+        player1 = player { velocity=(strafe,dy) }
         strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
 
 draw :: Surface -> Player -> FixedCamera -> IO ()
@@ -29,7 +29,9 @@ draw screen (Player (Rectangle x y _ _)  _ _ image) cam = do
     img <- image
     let pt = gameToScreen cam 640 480 (x,y)
     case pt of
-        Just x -> drawImage screen img x
+        Just x' -> do
+            putStrLn $ "(" ++ (show x) ++ "," ++ (show y) ++ "): " ++ (show x')
+            drawImage screen img x'
         Nothing -> return True
     return ()
 
@@ -39,7 +41,7 @@ moveH p@(Player (Rectangle x _ _ _) (dx,_) _ _) = p { bounding=newRect }
         newRect = (bounding p) { rectX=x+dx }
 
 moveV :: Player -> Player
-moveV p@(Player (Rectangle _ y _ _) (_,dy) _ _) = p { bounding=newRect } 
+moveV p@(Player (Rectangle _ y _ _) (dx,dy) _ _) = p { bounding=newRect,velocity=(dx,dy+2) } 
     where
         newRect = (bounding p) { rectY=y+dy }
 
@@ -58,7 +60,7 @@ checkCollisionV [] p = (p,False)
 checkCollisionV (r:rs) p@(Player pr@(Rectangle x y w h) (dx,dy) a i)
     | dy == 0 = (p, False)
     | dy > 0 = if r `isBelow` pr
-        then (Player (pr { rectY=((rectY r)-1) }) (dx,2) a i, True)
+        then (Player (pr { rectY=((rectY r) - h  - 1) }) (dx,2) a i, True)
         else checkCollisionV rs p
     | otherwise = if r `isOnTop` pr
         then (Player (pr { rectY=((rectY r) + (rectH r) + 1)}) (dx,2) a i, False)

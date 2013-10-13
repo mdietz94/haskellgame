@@ -71,6 +71,7 @@ initEnv = do
 
 loop :: AppEnv ()
 loop = do
+    modifyFPSM $ liftIO . start
     keyboardState <- getKeyboardState
     (quit,keyState) <- liftIO $ IH.update keyboardState
     putKeyboardState keyState
