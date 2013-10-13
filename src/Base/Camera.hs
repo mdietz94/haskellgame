@@ -1,4 +1,4 @@
-module HaskellGame.Camera where
+module Base.Camera where
 
 --import HaskellGame.Geometry
 

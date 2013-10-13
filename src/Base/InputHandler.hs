@@ -1,9 +1,9 @@
-module Base.InputHandler(KeyboardState, KeyState, initialize, update, isDown, isUp, isPressed, isReleased) where
+module Base.InputHandler(KeyboardState, KeyState, initialize, update, isDown, isUp, isPressed, isReleased, putLastKeyboardState) where
 
 import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.UI.SDL.Utilities as SDL.Utilities
-
-data KeyState = UP | DOWN | PRESSED | RELEASED deriving (Prelude.Enum, Eq, Ord, Bounded)
+import Control.Monad.State(liftIO)
+data KeyState = UP | DOWN | PRESSED | RELEASED deriving (Prelude.Enum, Eq, Ord, Bounded, Show)
 --data Key = KEY_LEFT | KEY_RIGHT | KEY_DOWN | KEY_UP deriving (Enum)
 type KeyboardState = [(SDL.SDLKey,KeyState)]
 
@@ -32,6 +32,7 @@ modKeyboardState ks (SDL.KeyUp (SDL.Keysym k _ _)) = set ks k RELEASED
 modKeyboardState ks _ = ks
 
 putLastKeyboardState :: KeyboardState -> KeyboardState
+putLastKeyboardState [] = []
 putLastKeyboardState (x:xs) = (modKey x) : (putLastKeyboardState xs)
     where
         modKey :: (SDL.SDLKey,KeyState) -> (SDL.SDLKey,KeyState)

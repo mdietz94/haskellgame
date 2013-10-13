@@ -3,7 +3,9 @@ module Player where
 import Base.GraphicsManager
 import Base.InputHandler
 import Base.Geometry
+import Base.Camera
 import Graphics.UI.SDL (SDLKey(..), Surface)
+
 
 data Player = Player { bounding :: Shape, velocity :: (Int,Int), alive :: Bool, image :: IO Surface }
 playerHeight = 10
@@ -22,10 +24,13 @@ update kS rects player@(Player _ (dx,dy) _  _) = if isOnGround && (isPressed kS 
         player1 = player { velocity=(dx+strafe,dy+2) }
         strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
 
-draw :: Surface -> Player -> IO ()
-draw screen (Player (Rectangle x y _ _)  _ _ image) = do
+draw :: Surface -> Player -> FixedCamera -> IO ()
+draw screen (Player (Rectangle x y _ _)  _ _ image) cam = do
     img <- image
-    drawImage screen img (x,y)
+    let pt = gameToScreen cam 640 480 (x,y)
+    case pt of
+        Just x -> drawImage screen img x
+        Nothing -> return True
     return ()
 
 moveH :: Player -> Player
