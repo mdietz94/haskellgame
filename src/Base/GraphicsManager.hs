@@ -1,4 +1,4 @@
-module HaskellGame.GraphicsManager where
+module Base.GraphicsManager where
 
 import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.UI.SDL.Image as SDL

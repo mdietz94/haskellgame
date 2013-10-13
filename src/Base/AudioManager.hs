@@ -1,4 +1,4 @@
-module HaskellGame.AudioManager where
+module Base.AudioManager where
 import Graphics.UI.SDL.Mixer as SDL.Mixer
 
 type Id = Int

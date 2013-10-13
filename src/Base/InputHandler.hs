@@ -1,4 +1,4 @@
-module HaskellGame.InputHandler(KeyboardState, KeyState, initialize, update, isDown, isUp, isPressed, isReleased) where
+module Base.InputHandler(KeyboardState, KeyState, initialize, update, isDown, isUp, isPressed, isReleased) where
 
 import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.UI.SDL.Utilities as SDL.Utilities

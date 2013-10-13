@@ -43,3 +43,17 @@ collides (Rectangle x y w h) l@(Line _ _) = (collides (Line (x,y) (x+w,y)) l) ||
 	(collides (Line (x+w,y) (x+w,y+h)) l) ||
 	(collides (Line (x,y+h) (x+w,y+h)) l)
 collides l@(Line _ _) r@(Rectangle _ _ _ _) = collides r l
+
+isOnTop :: Shape -> Shape -> Bool
+isOnTop (Rectangle x y w h) (Rectangle x1 y1 w1 h1) = ((x1 <= x) && (x <= (x1+w1))) || ((x <= x1) && (x1 <= (x+w))) && ((y < y1) && ((y+h) > y1))
+isOnTop _ _ = False
+
+isLeft :: Shape -> Shape -> Bool
+isLeft (Rectangle x y w h) (Rectangle x1 y1 w1 h1) = ((y1 <= y) && (y <= (y1+h1))) || ((y <= y1) && (y1 <= (y+h))) && ((x < x1) && ((x+w) > x1))
+isLeft _ _ = False
+
+isRight :: Shape -> Shape -> Bool
+isRight r r1 = isLeft r1 r
+
+isBelow :: Shape -> Shape -> Bool
+isBelow r r1 = isOnTop r1 r
