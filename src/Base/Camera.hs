@@ -13,14 +13,33 @@ data FixedCamera = FixedCamera { corner :: Point , width :: Width , height :: He
 -- Translates a point from the board to the screen
 gameToScreen :: FixedCamera -> Int -> Int -> (Int , Int) -> Maybe (Int , Int)
 gameToScreen fc@(FixedCamera (fx , fy) fw fh) sw sh (px , py)
-  | x' <= sw && x' >= 0 && y' <= sh && y' >= 0 = Just (x' , y')
+  | x' <= sw' && x' >= 0 && y' <= sh' && y' >= 0 = Just (ceiling x' , ceiling y')
   | otherwise = Nothing
-  where (x' , y') = (((px - fx) * (sw `div` fw) , (py - fy) * (sh `div` fh)))
+  where 
+    px' = fromIntegral px :: Float
+    fx' = fromIntegral fx :: Float
+    sw' = fromIntegral sw :: Float
+    fw' = fromIntegral fw :: Float
+    py' = fromIntegral py :: Float
+    fy' = fromIntegral fy :: Float
+    sh' = fromIntegral sh :: Float
+    fh' = fromIntegral fh :: Float
+    (x' , y') = (((px' - fx') * (sw' / fw') , (py' - fy') * (sh' / fh')))
 
 --Translates a point from the screen to the board
 screenToGame :: FixedCamera -> Int -> Int -> (Int , Int) -> (Int , Int)
-screenToGame fc@(FixedCamera (fx , fy) fw fh) sw sh (gx , gy) = (x' , y')
-  where (x' , y') = ((gx `div` (sw `div` fw) + fx) , (gy `div` (sh `div` fh) + fy))
+screenToGame fc@(FixedCamera (fx , fy) fw fh) sw sh (gx , gy) = (ceiling x' , ceiling y')
+  where
+    gx' = fromIntegral gx :: Float
+    fx' = fromIntegral fx :: Float
+    sw' = fromIntegral sw :: Float
+    fw' = fromIntegral fw :: Float
+    gy' = fromIntegral gy :: Float
+    fy' = fromIntegral fy :: Float
+    sh' = fromIntegral sh :: Float
+    fh' = fromIntegral fh :: Float
+    (x' , y') = ((gx' / (sw' / fw') + fx') , (gy' / (sh' / fh') + fy'))
+
 
 {-
 data ChaseCamera = {corner :: Point, width :: Width , height :: Height , fixCam :: FixedCamera}
@@ -32,12 +51,12 @@ gameToScreen :: ChaseCamera -> Int -> Int -> (Int , Int) -> Maybe (Int , Int)
 gameToScreen cc@((cx , cy) cw ch fcam) sw sh (px , py) = case (x' , y') in
     x' <= sw && y' <= sh -> Just (x' , y')
     _                    -> Nothing
-    where (x' , y') = (((px - cx) * (sw `div` cw) , (py - cy) * (sh `div` ch)))
+    where (x' , y') = (((px - cx) * (sw / cw) , (py - cy) * (sh / ch)))
 
 --Translates a point from the screen to the board
 screenToGame :: ChaseCamera -> Int -> Int -> (Int , Int) -> (Int , Int)
 screenToGame cc@((cx , cy) cw ch fcam) sw sh (gx , gy) = (x' , y')
-  where (x' , y') = ((gx `div` (sw , cw) + cx) , (ch `div` sh) * (gy `div` (sh , ch) + cy))
+  where (x' , y') = ((gx / (sw , cw) + cx) , (ch / sh) * (gy / (sh , ch) + cy))
 
 --Moves chase camera in x-direction and y-direction
 moveChaseCamera :: ChaseCamera -> Int -> Int -> ChaseCamera
