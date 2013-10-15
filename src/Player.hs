@@ -19,13 +19,13 @@ update kS rects p = snd $ runState (updateS kS rects) p
 
 updateS :: KeyboardState -> [Shape] -> State Player ()
 updateS kS rects = do
-    player@(Player _ (dx,dy) _  _) <- get
+    player@(Player (Rectangle x y _ _) (dx,dy) _  _) <- get
     put player { velocity=(strafe,dy) }
-    modify $ moveV . (checkCollisionH rects) . moveH
+    modify $ moveV . (checkCollisionH rects x) . moveH
     curP@(Player _ (dx',_) _ _) <- get
-    let (nP,oG) = checkCollisionV rects curP
+    let (nP,oG) = checkCollisionV rects y curP
     put nP
-    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(dx',-8) }) else return ()
+    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(dx',-10) }) else return ()
     where
         strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
 
@@ -50,23 +50,23 @@ moveV p@(Player (Rectangle _ y _ _) (dx,dy) _ _) = p { bounding=newRect,velocity
     where
         newRect = (bounding p) { rectY=y+dy }
 
-checkCollisionH :: [Shape] -> Player -> Player
-checkCollisionH [] p = p
-checkCollisionH (r:rs) p@(Player pr@(Rectangle x y w h) (dx,dy) a i)
+checkCollisionH :: [Shape] -> Int -> Player -> Player
+checkCollisionH [] _ p = p
+checkCollisionH (r:rs) origX p@(Player pr@(Rectangle x y w h) (dx,dy) a i)
     | dx == 0 = p
-    | dx > 0 = if r `isRight` pr
+    | dx > 0 = if r `collides` (pr { rectX=origX, rectW=(x-origX+w) })
         then Player (pr { rectX=((rectX r)-1) }) (0,dy) a i
-        else checkCollisionH rs p
-    | otherwise = if r `isLeft` pr
+        else checkCollisionH rs origX p
+    | otherwise = if r `collides` (pr { rectW=(origX-x) })
         then Player (pr { rectX=((rectX r) + (rectW r) + 1)}) (0,dy) a i
-        else checkCollisionH rs p
-checkCollisionV :: [Shape] -> Player -> (Player,Bool)
-checkCollisionV [] p = (p,False)
-checkCollisionV (r:rs) p@(Player pr@(Rectangle x y w h) (dx,dy) a i)
+        else checkCollisionH rs origX p
+checkCollisionV :: [Shape] -> Int -> Player -> (Player,Bool)
+checkCollisionV [] _ p = (p,False)
+checkCollisionV (r:rs) origY p@(Player pr@(Rectangle x y w h) (dx,dy) a i)
     | dy == 0 = (p, False)
-    | dy > 0 = if r `isBelow` pr
+    | dy > 0 = if r `collides` (pr { rectY=origY, rectH=(y-origY+h) })
         then (Player (pr { rectY=((rectY r) - h  - 1) }) (dx,2) a i, True)
-        else checkCollisionV rs p
-    | otherwise = if r `isOnTop` pr
+        else checkCollisionV rs origY p
+    | otherwise = if r `collides` (pr { rectH=(origY-y) })
         then (Player (pr { rectY=((rectY r) + (rectH r) + 1)}) (dx,2) a i, False)
-        else checkCollisionV rs p
+        else checkCollisionV rs origY p
