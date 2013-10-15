@@ -14,21 +14,25 @@ import Config
 import Timer
 
 data Level = Level {
+    lId :: Int,
     startPos :: (Int,Int),
-    goalPos :: (Int,Int),
+    goal :: Geo.Shape,
     staticObstacles :: [Platform.Platform],
     camera :: C.FixedCamera,
     player :: P.Player
 }
 
 initialize :: Int -> Level
-initialize 0 = Level sPos (300,200) platforms (C.FixedCamera (0,0) height width) (P.initialize sPos)
+initialize 0 = Level 0 sPos (Geo.Point 300 200) platforms (C.FixedCamera (0,0) height width) (P.initialize sPos)
     where
         sPos = (0,300) :: (Int,Int)
         platforms = [(Platform.Platform (Geo.Rectangle 0 300 400 30) (0,0,0))] :: [Platform.Platform]
 
-update :: IH.KeyboardState -> Level -> Level
-update kS lev =  lev { player=(P.update kS (map Platform.bounding $ staticObstacles lev) (player lev))}
+update :: IH.KeyboardState -> Level -> (Bool,Level)
+update kS lev = ((goal nL) `Geo.collides` (P.bounding nP), nL)
+    where
+        nL = lev { player=nP }
+        nP = P.update kS (map Platform.bounding $ staticObstacles lev) (player lev)
 
 
 draw :: SDL.Surface -> Level -> IO ()
