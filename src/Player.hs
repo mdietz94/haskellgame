@@ -29,8 +29,8 @@ updateS kS rects = do
     where
         strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
 
-draw :: Surface -> Player -> FixedCamera -> IO ()
-draw screen (Player (Rectangle x y _ _)  _ _ image) cam = do
+draw :: Surface -> FixedCamera -> Player -> IO ()
+draw screen cam (Player (Rectangle x y _ _)  _ _ image) = do
     img <- image
     let pt = gameToScreen cam 640 480 (x,y)
     case pt of

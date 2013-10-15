@@ -6,6 +6,7 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Reader
 import qualified Player as P
+import qualified Level as L
 import qualified Platform as Platform
 import qualified Base.GraphicsManager as G
 import qualified Base.InputHandler as IH
@@ -14,16 +15,14 @@ import qualified Base.Camera as C
 import qualified Base.Geometry as Geo
 import qualified Graphics.UI.SDL as SDL
 import Timer
+import Config
 
-screenWidth  = 640
-screenHeight = 480
 screenBpp    = 32
 
 
 data AppData = AppData {
-    camera :: C.FixedCamera,
+    level :: L.Level,
     keyboardState :: IH.KeyboardState,
-    player :: P.Player,
     fps :: Timer
 }
 
@@ -34,65 +33,56 @@ data AppConfig = AppConfig {
 type AppState = StateT AppData IO
 type AppEnv = ReaderT AppConfig AppState
 
-getFPS :: MonadState AppData m => m Timer
-getFPS = liftM fps get
-
 putFPS :: MonadState AppData m => Timer -> m ()
 putFPS t = modify $ \s -> s { fps = t }
-
-putKeyboardState :: MonadState AppData m => IH.KeyboardState -> m ()
-putKeyboardState t = modify $ \s -> s { keyboardState = t }
-
-getKeyboardState :: MonadState AppData m => m IH.KeyboardState
-getKeyboardState = liftM keyboardState get
-
-getPlayer :: MonadState AppData m => m P.Player
-getPlayer = liftM player get
 
 getScreen :: MonadReader AppConfig m => m SDL.Surface
 getScreen = liftM screen ask
 
-putPlayer :: MonadState AppData m => P.Player -> m ()
-putPlayer t = modify $ \s -> s { player = t }
-
-getCamera :: MonadState AppData m => m C.FixedCamera
-getCamera = liftM camera get
-
 modifyFPSM :: MonadState AppData m => (Timer -> m Timer) -> m ()
-modifyFPSM act = getFPS >>= act >>= putFPS
+modifyFPSM act = (liftM fps get) >>= act >>= putFPS
+
+putLevel :: MonadState AppData m => L.Level -> m ()
+putLevel l = modify $ \s -> s { level = l }
+
+putKeyboardState :: MonadState AppData m => IH.KeyboardState -> m ()
+putKeyboardState t = modify $ \s -> s { keyboardState = t }
 
 initEnv :: IO (AppConfig, AppData)
 initEnv = do    
-    screen <- G.initialize 640 480 "Best Game Ever"
+    screen <- G.initialize height width "Best Game Ever"
     (_,keys) <- IH.initialize
-    let player = P.initialize (0,0)
-    let camera = C.FixedCamera (0,0) 1000 1000
+    let level = L.initialize 0
     fps <- start defaultTimer
-    return (AppConfig screen, AppData camera keys player fps) 
+    return (AppConfig screen, AppData level keys fps) 
 
 loop :: AppEnv ()
 loop = do
     modifyFPSM $ liftIO . start
-    keyboardState <- getKeyboardState
+
+    -- Update Code
+
+    keyboardState <- liftM keyboardState get
     (quit,keyState) <- liftIO $ IH.update keyboardState
     putKeyboardState keyState
-    --liftIO $ putStrLn . show $ IH.isDown keyState SDL.SDLK_LEFT
-    fps <- getFPS
 
-    player <- getPlayer
-    camera <- getCamera
-    let newPlayer = P.update keyState [(Geo.Rectangle (-20) 40 100 20), (Geo.Rectangle 100 100 100 20)] player
-    putPlayer newPlayer
+    fps <- liftM fps get
+    level <- liftM level get
+    let nL = L.update keyState level
+    putLevel nL
 
     putKeyboardState $ IH.putLastKeyboardState keyState
+
+    -- Drawing Code
+
     screen    <- getScreen
     liftIO $ do
         G.begin screen
-        Platform.draw screen (Platform.Platform (Geo.Rectangle 0 40 80 20) (0xff,0x00,0xff)) camera
-        Platform.draw screen (Platform.Platform (Geo.Rectangle 100 100 100 20) (0xff,0x00,0xff)) camera
-        --G.drawRect screen (0,0) 640 480 (0x00,0x00,0x00)
-        P.draw screen player camera
+        L.draw screen nL
         G.end screen
+
+        -- Ensure framerate
+
         ticks <- getTimerTicks fps
         when (ticks < secsPerFrame) $ do
             SDL.delay $ secsPerFrame - ticks
