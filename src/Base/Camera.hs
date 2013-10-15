@@ -24,7 +24,7 @@ gameToScreen fc@(FixedCamera (fx , fy) fw fh) sw sh (px , py)
     fy' = fromIntegral fy :: Float
     sh' = fromIntegral sh :: Float
     fh' = fromIntegral fh :: Float
-    (x' , y') = (((px' - fx') * (sw' / fw') , (py' - fy') * (sh' / fh')))
+    (x' , y') = ((px' - fx') * (fh' / fw' * sh' / sw') , (py' - fy') * (fh' / fw' * sh' / sw'))
 
 --Translates a point from the screen to the board
 screenToGame :: FixedCamera -> Int -> Int -> (Int , Int) -> (Int , Int)

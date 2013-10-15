@@ -8,8 +8,8 @@ import Graphics.UI.SDL (SDLKey(..), Surface)
 import Control.Monad.State
 
 data Player = Player { bounding :: Shape, velocity :: (Int,Int), alive :: Bool, image :: IO Surface }
-playerHeight = 10
-playerWidth = 5
+playerHeight = 25
+playerWidth = 25
 
 initialize :: (Int,Int) -> Player
 initialize (x,y) = Player (Rectangle x y playerWidth playerHeight) (0,2) True (loadImage "dot.bmp" Nothing)
@@ -55,7 +55,7 @@ checkCollisionH [] _ p = p
 checkCollisionH (r:rs) origX p@(Player pr@(Rectangle x y w h) (dx,dy) a i)
     | dx == 0 = p
     | dx > 0 = if r `collides` (pr { rectX=origX, rectW=(x-origX+w) })
-        then Player (pr { rectX=((rectX r)-1) }) (0,dy) a i
+        then Player (pr { rectX=((rectX r)-w-1) }) (0,dy) a i
         else checkCollisionH rs origX p
     | otherwise = if r `collides` (pr { rectW=(origX-x) })
         then Player (pr { rectX=((rectX r) + (rectW r) + 1)}) (0,dy) a i
