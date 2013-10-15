@@ -40,10 +40,28 @@ screenToGame fc@(FixedCamera (fx , fy) fw fh) sw sh (gx , gy) = (ceiling x' , ce
     fh' = fromIntegral fh :: Float
     (x' , y') = ((gx' / (sw' / fw') + fx') , (gy' / (sh' / fh') + fy'))
 
+fixedCamDoesCollideX :: FixedCamera -> Int -> Int -> Bool
+fixedCamDoesCollideX fc@(FixedCamera (fx , fy) fw fh) x sw = (fx + x <= 0) || (fx + fw + x >= sw)
+
+fixedCamDoesCollideY :: FixedCamera -> Int -> Int -> Bool
+fixedCamDoesCollideY fc@(FixedCamera (fx , fy) fw fh) y sh = (fy + y <= 0) || (fy + fh + y >= sh)
+
+moveFixedCamX :: FixedCamera -> Int -> Int -> FixedCamera
+moveFixedCamX fc@(FixedCamera (fx , fy) fw fh) x sw
+  | fixedCamDoesCollideX fc x sw = fc
+  | otherwise = FixedCamera (fx+x,fy) fw fh
+
+moveFixedCamY :: FixedCamera -> Int -> Int -> FixedCamera
+moveFixedCamY fc@(FixedCamera (fx , fy) fw fh) y sh 
+  | fixedCamDoesCollideY fc y sh = fc
+  | otherwise = FixedCamera (fx , fy + y) fw fh
+
+
+data ChaseCamera = ChaseCamera {chaseCamCorner :: Point, chaseCamWidth :: Width , chaseCamHeight :: Height , fixCam :: FixedCamera}
+
+
 
 {-
-data ChaseCamera = {corner :: Point, width :: Width , height :: Height , fixCam :: FixedCamera}
-
 data Camera = FixedCamera | ChaseCamera
 
 -- Translates a point from the board to the screen
