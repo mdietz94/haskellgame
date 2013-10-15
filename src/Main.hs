@@ -6,6 +6,7 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Reader
 import qualified Player as P
+import qualified Platform as Platform
 import qualified Base.GraphicsManager as G
 import qualified Base.InputHandler as IH
 import qualified Base.AudioManager as AM
@@ -80,23 +81,25 @@ loop = do
 
     player <- getPlayer
     camera <- getCamera
-    let newPlayer = P.update keyState [(Geo.Rectangle (-20) 20 100 20)] player
+    let newPlayer = P.update keyState [(Geo.Rectangle (-20) 20 100 20), (Geo.Rectangle 100 60 100 20)] player
     putPlayer newPlayer
 
     putKeyboardState $ IH.putLastKeyboardState keyState
     screen    <- getScreen
     liftIO $ do
         G.begin screen
+        Platform.draw screen (Platform.Platform (Geo.Rectangle 0 52 55 20) (0xff,0x00,0xff)) camera
+        Platform.draw screen (Platform.Platform (Geo.Rectangle 110 80 65 20) (0xff,0x00,0xff)) camera
+        --G.drawRect screen (0,0) 640 480 (0x00,0x00,0x00)
         P.draw screen player camera
         G.end screen
-        
         ticks <- getTimerTicks fps
         when (ticks < secsPerFrame) $ do
             SDL.delay $ secsPerFrame - ticks
 
     unless quit loop
  where
-    framesPerSecond = 10
+    framesPerSecond = 20
     secsPerFrame    = 1000 `div` framesPerSecond
 
 runLoop :: AppConfig -> AppData -> IO ()

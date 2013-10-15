@@ -25,7 +25,7 @@ updateS kS rects = do
     curP@(Player _ (dx',_) _ _) <- get
     let (nP,oG) = checkCollisionV rects curP
     put nP
-    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(dx',-5) }) else return ()
+    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(dx',-8) }) else return ()
     where
         strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
 

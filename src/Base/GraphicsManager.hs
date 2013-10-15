@@ -39,13 +39,18 @@ initialize w h title = do
     screen <- SDL.setVideoMode w h screenBpp [SDL.SWSurface]
     SDL.setCaption title []
     return screen
-    
+
+type Color = (Int,Int,Int)
+drawRect :: SDL.Surface -> Pos -> Width -> Height -> Color -> IO ()
+drawRect screen (x,y) w h (r,g,b) = do
+    color <- (SDL.mapRGB . SDL.surfaceGetPixelFormat) screen (fromIntegral r) (fromIntegral g) (fromIntegral b)
+    SDL.fillRect screen (Just (SDL.Rect x y w h)) color
+    return ()
 
 begin :: SDL.Surface -> IO ()
 begin screen = do
-    jrect <- Just `liftM` SDL.getClipRect screen
     color <- (SDL.mapRGB . SDL.surfaceGetPixelFormat) screen 0xff 0xff 0xff
-    SDL.fillRect screen jrect color
+    SDL.fillRect screen Nothing color
     return ()
 
 end :: SDL.Surface -> IO ()
