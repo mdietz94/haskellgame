@@ -19,19 +19,20 @@ data Level = Level {
     goal :: Geo.Shape,
     staticObstacles :: [Platform.Platform],
     camera :: C.FixedCamera,
-    player :: P.Player
+    player :: P.Player,
+    levelHistory :: [Level]
 }
 
 initialize :: Int -> Level
-initialize 0 = Level 0 sPos (Geo.Point 300 200) platforms (C.FixedCamera (0,0) height width) (P.initialize sPos)
+initialize 0 = Level 0 sPos (Geo.Point 300 200) platforms (C.FixedCamera (0,0) height width) (P.initialize sPos) []
     where
         sPos = (0,300) :: (Int,Int)
         platforms = [(Platform.Platform (Geo.Rectangle 0 300 400 30) (0,0,0))] :: [Platform.Platform]
 
 update :: IH.KeyboardState -> Level -> (Bool,Level)
-update kS lev = ((goal nL) `Geo.collides` (P.bounding nP), nL)
+update kS lev = if IH.isDown kS SDL.SDLK_LSHIFT then (False,head (levelHistory lev)) else ((goal nL) `Geo.collides` (P.bounding nP), nL)
     where
-        nL = lev { player=nP }
+        nL = lev { player=nP, levelHistory=(lev:(levelHistory lev)) }
         nP = P.update kS (map Platform.bounding $ staticObstacles lev) (player lev)
 
 
