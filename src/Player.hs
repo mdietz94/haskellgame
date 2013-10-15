@@ -5,7 +5,7 @@ import Base.InputHandler
 import Base.Geometry
 import Base.Camera
 import Graphics.UI.SDL (SDLKey(..), Surface)
-
+import Control.Monad.State
 
 data Player = Player { bounding :: Shape, velocity :: (Int,Int), alive :: Bool, image :: IO Surface }
 playerHeight = 10
@@ -15,13 +15,18 @@ initialize :: (Int,Int) -> Player
 initialize (x,y) = Player (Rectangle x y playerWidth playerHeight) (0,2) True (loadImage "dot.bmp" Nothing)
 
 update :: KeyboardState -> [Shape] -> Player -> Player
-update kS rects player@(Player _ (dx,dy) _  _) = if isOnGround && (isPressed kS SDLK_UP) then player5 { velocity=(dx',-5) } else player5
+update kS rects p = snd $ runState (updateS kS rects) p
+
+updateS :: KeyboardState -> [Shape] -> State Player ()
+updateS kS rects = do
+    player@(Player _ (dx,dy) _  _) <- get
+    put player { velocity=(strafe,dy) }
+    modify $ moveV . (checkCollisionH rects) . moveH
+    curP@(Player _ (dx',_) _ _) <- get
+    let (nP,oG) = checkCollisionV rects curP
+    put nP
+    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(dx',-5) }) else return ()
     where
-        (player5@(Player _ (dx',dy') _ _),isOnGround) = checkCollisionV rects player4
-        player4 = moveV player3
-        player3 = checkCollisionH rects player2
-        player2 = moveH player1
-        player1 = player { velocity=(strafe,dy) }
         strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
 
 draw :: Surface -> Player -> FixedCamera -> IO ()
