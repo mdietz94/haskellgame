@@ -7,6 +7,7 @@ import qualified Player as P
 import qualified Platform as Platform
 import qualified Base.InputHandler as IH
 import qualified Base.AudioManager as AM
+import qualified Base.GraphicsManager as G
 import qualified Base.Camera as C
 import qualified Base.Geometry as Geo
 import qualified Graphics.UI.SDL as SDL
@@ -19,26 +20,31 @@ data Level = Level {
     goal :: Geo.Shape,
     staticObstacles :: [Platform.Platform],
     camera :: C.FixedCamera,
-    player :: P.Player,
+    players :: [P.Player],
+    curPlayer :: Int,
     levelHistory :: [Level]
 }
 
 initialize :: Int -> Level
-initialize 0 = Level 0 sPos (Geo.Point 300 200) platforms (C.FixedCamera (0,0) height width) (P.initialize sPos) []
+initialize 0 = Level 0 sPos (Geo.Point 300 220) platforms (C.FixedCamera (0,0) height width) [(P.initialize sPos)] 0 []
     where
         sPos = (0,300) :: (Int,Int)
-        platforms = [(Platform.Platform (Geo.Rectangle 0 300 400 30) (0,0,0))] :: [Platform.Platform]
+        platforms = [(Platform.Platform (Geo.Rectangle 0 300 400 30) (0,0,0)),(Platform.Platform (Geo.Rectangle 450 290 300 30) (0,0,0)), (Platform.Platform (Geo.Rectangle 300 260 95 10) (0,0,0))]
 
 update :: IH.KeyboardState -> Level -> (Bool,Level)
 update kS lev = if IH.isDown kS SDL.SDLK_LSHIFT then (False,head (levelHistory lev)) else ((goal nL) `Geo.collides` (P.bounding nP), nL)
     where
-        nL = lev { player=nP, levelHistory=(lev:(levelHistory lev)) }
-        nP = P.update kS (map Platform.bounding $ staticObstacles lev) (player lev)
-
+        nL = lev { players=pls2, levelHistory=(lev:(levelHistory lev)) }
+        nP = P.update kS (map Platform.bounding $ staticObstacles lev) (pls!!playInd)
+        pls2 = [ if p /= playInd then (pls!!p) else nP | p <- [0..((length pls) - 1)]]
+        pls = players lev
+        playInd = max 0 (min pI ((length (players lev)) - 1))
+        pI = (curPlayer lev) + (if IH.isDown kS SDL.SDLK_q then (-1) else 0) + (if IH.isDown kS SDL.SDLK_e then 1 else 0) 
 
 draw :: SDL.Surface -> Level -> IO ()
 draw screen lev = do
     -- last will force evaluation, and keep type IO ()
-    last $ map (Platform.draw screen (camera lev)) (staticObstacles lev)
-    P.draw screen (camera lev) (player lev)
+    sequence $ map (Platform.draw screen (camera lev)) (staticObstacles lev)
+    sequence $ map (P.draw screen (camera lev)) (players lev)
+    G.drawRect screen ((\p -> (Geo.ptX p) - 5) . goal $ lev, (\p -> (Geo.ptY p) - 5) . goal $ lev) 10 10 (50,100,50)
     return ()
