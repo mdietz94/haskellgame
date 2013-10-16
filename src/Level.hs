@@ -16,7 +16,7 @@ import Timer
 
 data Level = Level {
     lId :: Int,
-    startPos :: (Int,Int),
+    startPos :: [(Int,Int)],
     goal :: Geo.Shape,
     staticObstacles :: [Platform.Platform],
     camera :: C.FixedCamera,
@@ -26,17 +26,17 @@ data Level = Level {
 }
 
 initialize :: Int -> Level
-initialize 0 = Level 0 sPos (Geo.Point 300 220) platforms (C.FixedCamera (0,0) height width) [(P.initialize sPos)] 0 []
+initialize 0 = Level 0 sPos (Geo.Point 300 220) platforms (C.FixedCamera (0,0) height width) (map P.initialize sPos) 0 []
     where
-        sPos = (0,300) :: (Int,Int)
+        sPos = [(0,200), (100,200)]
         platforms = [(Platform.Platform (Geo.Rectangle 0 300 400 30) (0,0,0)),(Platform.Platform (Geo.Rectangle 450 290 300 30) (0,0,0)), (Platform.Platform (Geo.Rectangle 300 260 95 10) (0,0,0))]
 
 update :: IH.KeyboardState -> Level -> (Bool,Level)
 update kS lev = if IH.isDown kS SDL.SDLK_LSHIFT then (False,head (levelHistory lev)) else ((goal nL) `Geo.collides` (P.bounding nP), nL)
     where
-        nL = lev { players=pls2, levelHistory=(lev:(levelHistory lev)) }
+        nL = lev { players=pls2, levelHistory=(lev:(levelHistory lev)), curPlayer=playInd }
         nP = P.update kS (map Platform.bounding $ staticObstacles lev) (pls!!playInd)
-        pls2 = [ if p /= playInd then (pls!!p) else nP | p <- [0..((length pls) - 1)]]
+        pls2 = [ if p /= playInd then P.update [] (map Platform.bounding $ staticObstacles lev) (pls!!p) else nP | p <- [0..((length pls) - 1)]]
         pls = players lev
         playInd = max 0 (min pI ((length (players lev)) - 1))
         pI = (curPlayer lev) + (if IH.isDown kS SDL.SDLK_q then (-1) else 0) + (if IH.isDown kS SDL.SDLK_e then 1 else 0) 
