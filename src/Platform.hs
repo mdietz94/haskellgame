@@ -5,29 +5,19 @@ import Base.Geometry (Shape(..),collides)
 import Base.Camera
 import Graphics.UI.SDL (Surface)
 
-data Platform = Platform { bounding :: Shape, color :: (Int,Int,Int) }
+data Platform =
+	Platform { bounding :: Shape, color :: (Int,Int,Int) } |
+	MoveablePlatform {
+		start :: (Int,Int),
+		end :: (Int,Int),
+		mBounding :: Shape,
+		speed :: Int,
+		mColor :: (Int,Int,Int),
+		forwards :: Bool
+	} deriving Show
 
--- For now it is important that
--- (end-start)*speed will move from start to end evenly, because
--- otherwise we will jump over the end and never turn around
-data MoveablePlatform = MoveablePlatform {
-	start :: (Int,Int),
-	end :: (Int,Int),
-	mBounding :: Shape,
-	speed :: Int,
-	mColor :: (Int,Int,Int),
-	forwards :: Bool
-} deriving Show
-
-{-
-
-Should probably put MoveablePlatform and Platform together?  We can still separate
-them in LevelData/LevelConfig but it will probably simplify things.
-
--}
-
-initialize :: (Int,Int) -> (Int,Int) -> Int -> Int -> Int -> (Int,Int,Int) -> MoveablePlatform
-initialize start@(x,y) end width height speed color = MoveablePlatform start end (Rectangle x y width height) speed color True
+moveableInitialize :: (Int,Int) -> (Int,Int) -> Int -> Int -> Int -> (Int,Int,Int) -> Platform
+moveableInitialize start@(x,y) end width height speed color = MoveablePlatform start end (Rectangle x y width height) speed color True
 
 {-
 
@@ -38,13 +28,14 @@ the target so that we would at least definitely hit it.  Both are probably equal
 
 -}
 
-update :: [Shape] -> MoveablePlatform -> MoveablePlatform
+update :: [Shape] -> Platform -> Platform
 update objs mp@(MoveablePlatform _ _ (Rectangle x y _ _) _ _ _ ) = mp2 { mBounding=mpr1 }
 	where
 		mpr1 = checkCollisionV objs y dy (mBounding mp2)
 		(dy,mp2) = moveV $ mp1 { mBounding=mpr }
 		mpr = checkCollisionH objs x dx (mBounding mp1)
 		(dx,mp1) = moveH mp
+update _ p@(Platform _ _) = p
 
 draw :: Surface -> FixedCamera -> Platform -> IO ()
 draw screen cam (Platform (Rectangle x y w h)  color) = do
@@ -54,9 +45,7 @@ draw screen cam (Platform (Rectangle x y w h)  color) = do
         (Just x', Just (w',h')) -> drawRect screen x' w' h' color
         _ -> return ()
     return ()
-
-moveableDraw :: Surface -> FixedCamera -> MoveablePlatform -> IO ()
-moveableDraw screen cam (MoveablePlatform _ _ (Rectangle x y w h) _ color _) = do
+draw screen cam (MoveablePlatform _ _ (Rectangle x y w h) _ color _) = do
     let pt = gameToScreen cam 640 480 (x,y)
     let wh = gameToScreen cam 640 480 (w,h)
     case (pt,wh) of
@@ -72,12 +61,13 @@ general version should be able to be created.
 
 -}
 
-moveH :: MoveablePlatform -> (Int,MoveablePlatform)
+moveH :: Platform -> (Int,Platform)
 moveH mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) speed _ forward ) = (dx,mp { mBounding=newRect, forwards=fwd })
     where
         newRect = (mBounding mp) { rectX=x+dx }
         dx = ceiling . (* (fromIntegral speed)) . fst . normalize $ (if fwd then (ex-sx,ey-sy) else (sx-ex,sy-ey))
         fwd = if forward then (x,y) /= (ex,ey) else (x,y) == (sx,sy)
+moveH p@(Platform _ _) = (0,p)
 
 normalize :: (Int,Int) -> (Float,Float)
 normalize (x,y) = (dx,dy)
@@ -86,12 +76,13 @@ normalize (x,y) = (dx,dy)
 		dx = (fromIntegral x) / mult
 		mult = sqrt . fromIntegral $ x*x + y*y
 
-moveV :: MoveablePlatform -> (Int,MoveablePlatform)
+moveV :: Platform -> (Int,Platform)
 moveV mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) speed _ forward ) = (dy,mp { mBounding=newRect, forwards=fwd })
     where
         newRect = (mBounding mp) { rectY=y+dy }
         dy = ceiling . (* (fromIntegral speed)) . snd . normalize $ (if fwd then (ex-sx,ey-sy) else (sx-ex,sy-ey))
         fwd = if forward then (x,y) /= (ex,ey) else (x,y) == (sx,sy)
+moveV p@(Platform _ _) = (0,p)
 
 checkCollisionH :: [Shape] -> Int -> Int -> Shape -> Shape
 checkCollisionH [] _ _ mp = mp
