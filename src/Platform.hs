@@ -50,9 +50,10 @@ draw screen cam (MoveablePlatform _ _ (Rectangle x y w h) _ color _) = do
 move :: Platform -> Platform
 move mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) speed _ forward ) = mp { mBounding=newRect, forwards=fwd }
     where
-        newRect = (mBounding mp) { rectX=x+dx, rectY=y+dy }
-        (dx,dy) = (\(a,b) -> (ceiling . (* (fromIntegral speed)) $ a, (ceiling . (* (fromIntegral speed)) $ b))) . normalize $ (if fwd then (ex-sx,ey-sy) else (sx-ex,sy-ey))
-        fwd = if forward then (x,y) /= (ex,ey) else (x,y) == (sx,sy)
+        newRect = (mBounding mp) { rectX=x+dx', rectY=y+dy' }
+        (dx',dy') = (dx * (if fwd then 1 else (-1)), dy * (if fwd then 1 else (-1)))
+        fwd = if forward then (abs(x+dx-ex) + abs(y+dy-ey)) < (abs(x-ex) + abs(y-ey)) else ((abs(x+dx-sx) + abs(y+dy-sy)) < abs(x-sx) + abs(y-sy))
+        (dx,dy) = (\(a,b) -> (ceiling . (* (fromIntegral speed)) $ a, (ceiling . (* (fromIntegral speed)) $ b))) . normalize $ (ex-sx,ey-sy)
 move p@(Platform _ _) = p
 
 normalize :: (Int,Int) -> (Float,Float)
