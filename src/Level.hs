@@ -14,6 +14,28 @@ import qualified Graphics.UI.SDL as SDL
 import Config
 import Timer
 
+{-
+
+We should use these structures to avoid overhead when generating
+level history.
+
+data LevelConfig = LevelConfig {
+    lId :: Int,
+    startPos :: [(Int,Int)],
+    goal :: Geo.Shape,
+    staticObstacles :: [Platform.Platform],
+}
+
+data LevelData = LevelData {
+    movingObstacles :: [Platform.MoveablePlatform],
+    camera :: C.FixedCamera,
+    players :: [P.Player],
+    curPlayer :: Int,
+    levelHistory :: [LevelData]
+}
+
+-}
+
 data Level = Level {
     lId :: Int,
     startPos :: [(Int,Int)],
@@ -32,6 +54,15 @@ initialize 0 = Level 0 sPos (Geo.Point 300 220) platforms mPlatforms (C.FixedCam
         sPos = [(0,200), (100,200)]
         mPlatforms = [(Platform.initialize (0,100) (100,100) 30 10 5 (0,0,0) )]
         platforms = [(Platform.Platform (Geo.Rectangle 0 300 400 30) (0,0,0)),(Platform.Platform (Geo.Rectangle 450 290 300 30) (0,0,0)), (Platform.Platform (Geo.Rectangle 300 260 95 10) (0,0,0))]
+
+{-
+
+We need to differentiate between objects, since right now objects of the same
+type cannot collide because otherwise they will always detect collisions against
+themselves.  We could just check to see if the objects are equivalent, though
+working around the indices is probably a better idea.
+
+-}
 
 update :: IH.KeyboardState -> Level -> (Bool,Level)
 update kS lev = if IH.isDown kS SDL.SDLK_LSHIFT then (False,head (levelHistory lev)) else ((goal nL) `Geo.collides` (P.bounding nP), nL)
@@ -52,7 +83,6 @@ draw screen lev = do
     -- last will force evaluation, and keep type IO ()
     sequence $ map (Platform.draw screen (camera lev)) (staticObstacles lev)
     sequence $ map (P.draw screen (camera lev)) (players lev)
-    putStrLn . show $ (movingObstacles lev)
     sequence $ map (Platform.moveableDraw screen (camera lev)) (movingObstacles lev)
     G.drawRect screen ((\p -> (Geo.ptX p) - 5) . goal $ lev, (\p -> (Geo.ptY p) - 5) . goal $ lev) 10 10 (50,100,50)
     return ()

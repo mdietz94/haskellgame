@@ -19,8 +19,24 @@ data MoveablePlatform = MoveablePlatform {
 	forwards :: Bool
 } deriving Show
 
+{-
+
+Should probably put MoveablePlatform and Platform together?  We can still separate
+them in LevelData/LevelConfig but it will probably simplify things.
+
+-}
+
 initialize :: (Int,Int) -> (Int,Int) -> Int -> Int -> Int -> (Int,Int,Int) -> MoveablePlatform
 initialize start@(x,y) end width height speed color = MoveablePlatform start end (Rectangle x y width height) speed color True
+
+{-
+
+We need to make the turnaround much better, since it will move past it in this instance.
+A check to see if the current direction makes us closer or further away is probably a much better
+idea than making the platform hit the target exactly.  Or we could create a 10x10 box around
+the target so that we would at least definitely hit it.  Both are probably equally slow/fast.
+
+-}
 
 update :: [Shape] -> MoveablePlatform -> MoveablePlatform
 update objs mp@(MoveablePlatform _ _ (Rectangle x y _ _) _ _ _ ) = mp2 { mBounding=mpr1 }
@@ -47,6 +63,14 @@ moveableDraw screen cam (MoveablePlatform _ _ (Rectangle x y w h) _ color _) = d
         (Just x', Just (w',h')) -> drawRect screen x' w' h' color
         _ -> return ()
     return ()
+
+{-
+
+These functions should probably be generalized somewhere.  They do differ
+slightly from the users' versions, but they are similar enough that a more
+general version should be able to be created.
+
+-}
 
 moveH :: MoveablePlatform -> (Int,MoveablePlatform)
 moveH mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) speed _ forward ) = (dx,mp { mBounding=newRect, forwards=fwd })
