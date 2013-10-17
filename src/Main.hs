@@ -69,7 +69,7 @@ loop = do
     fps <- liftM fps get
     level <- liftM level get
     let (won,nL) = L.update keyState level
-    putLevel (if won then L.initialize ((L.lId nL) + 1) else nL)
+    putLevel (if won then L.initialize ((L.lId . L.lC $ nL) + 1) else nL)
 
     putKeyboardState $ IH.putLastKeyboardState keyState
 
