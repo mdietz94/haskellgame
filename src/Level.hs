@@ -65,18 +65,20 @@ working around the indices is probably a better idea.
 -}
 
 update :: IH.KeyboardState -> Level -> (Bool,Level)
-update kS lev = if IH.isDown kS SDL.SDLK_LSHIFT then (False,head (levelHistory lev)) else ((goal nL) `Geo.collides` (P.bounding nP), nL)
+update kS lev = if IH.isDown kS SDL.SDLK_LSHIFT then (False,head (levelHistory lev)) else (not . (elem False) . (map (Geo.collides (goal nL))) $ pObs, nL)
     where
-        nL = lev { players=pls2, levelHistory=(lev:(levelHistory lev)), curPlayer=playInd, movingObstacles=newObstacles }
-        newObstacles = map (Platform.update $ sObs ++ pObs) (movingObstacles lev)
-        nP = P.update kS (mObs ++ sObs) (pls!!playInd)
-        pls2 = [ if p /= playInd then P.update [] (mObs ++ sObs) (pls!!p) else nP | p <- [0..((length pls) - 1)]]
-        pls = players lev
+        nL = lev { players=newPlayers, levelHistory=(lev:(levelHistory lev)), curPlayer=playInd, movingObstacles=newObstacles }
         playInd = max 0 (min pI ((length (players lev)) - 1))
         pI = (curPlayer lev) + (if IH.isDown kS SDL.SDLK_q then (-1) else 0) + (if IH.isDown kS SDL.SDLK_e then 1 else 0) 
         sObs = (map Platform.bounding $ staticObstacles lev)
         mObs = (map Platform.mBounding $ movingObstacles lev)
         pObs = (map P.bounding $ players lev)
+        skip :: Int -> [a] -> [a]
+        skip _ [] = []
+        skip 0 (x:xs) = xs
+        skip n (x:xs) = x : (skip (n-1) xs)
+        newPlayers = [ P.update (if n == playInd then kS else []) (sObs ++ mObs ++ (skip n pObs)) ((players lev)!!n) | n <- [0..((length . players $ lev) - 1)] ]
+        newObstacles = map Platform.update (movingObstacles lev)
 
 draw :: SDL.Surface -> Level -> IO ()
 draw screen lev = do
