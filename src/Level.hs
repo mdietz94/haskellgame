@@ -38,7 +38,7 @@ initialize :: Int -> Level
 initialize 0 = Level (LevelConfig 0 sPos (Geo.Rectangle 350 240 20 20) platforms) (LevelData mPlatforms (C.FixedCamera (0,0) height width) (map P.initialize sPos) 0 [])
     where
         sPos = [(0,200), (100,200)]
-        mPlatforms = [(Platform.moveableInitialize (0,200) (100,200) 30 10 5 (0,0,0) )]
+        mPlatforms = [(Platform.moveableInitialize (10,200) (100,250) 30 10 5 (0,0,0) )]
         platforms = [(Platform.Platform (Geo.Rectangle 0 300 400 30) (0,0,0)),(Platform.Platform (Geo.Rectangle 450 290 300 30) (0,0,0)), (Platform.Platform (Geo.Rectangle 300 260 95 10) (0,0,0))]
 
 update :: IH.KeyboardState -> Level -> (Bool,Level)
