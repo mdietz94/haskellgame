@@ -35,7 +35,6 @@ draw screen cam (Player (Rectangle x y _ _)  _ _ image) = do
     let pt = gameToScreen cam 640 480 (x,y)
     case pt of
         Just x' -> do
-            putStrLn $ "(" ++ (show x) ++ "," ++ (show y) ++ "): " ++ (show x')
             drawImage screen img x'
         Nothing -> return True
     return ()
