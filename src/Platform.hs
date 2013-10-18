@@ -11,13 +11,15 @@ data Platform =
 		start :: (Int,Int),
 		end :: (Int,Int),
 		mBounding :: Shape,
-		speed :: Int,
+		vel :: (Int,Int),
 		mColor :: (Int,Int,Int),
 		forwards :: Bool
 	} deriving Show
 
 moveableInitialize :: (Int,Int) -> (Int,Int) -> Int -> Int -> Int -> (Int,Int,Int) -> Platform
-moveableInitialize start@(x,y) end width height speed color = MoveablePlatform start end (Rectangle x y width height) speed color True
+moveableInitialize start@(x,y) end@(ex,ey) width height speed color = MoveablePlatform start end (Rectangle x y width height) (dx,dy) color True
+    where
+        (dx,dy) = (\(a,b) -> (ceiling . (* (fromIntegral speed)) $ a, (ceiling . (* (fromIntegral speed)) $ b))) . normalize $ (ex-x,ey-y)
 
 {-
 
@@ -48,12 +50,11 @@ draw screen cam (MoveablePlatform _ _ (Rectangle x y w h) _ color _) = do
     return ()
 
 move :: Platform -> Platform
-move mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) speed _ forward ) = mp { mBounding=newRect, forwards=fwd }
+move mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) (dx,dy) _ forward ) = mp { mBounding=newRect, forwards=fwd }
     where
         newRect = (mBounding mp) { rectX=x+dx', rectY=y+dy' }
         (dx',dy') = (dx * (if fwd then 1 else (-1)), dy * (if fwd then 1 else (-1)))
         fwd = if forward then (abs(x+dx-ex) + abs(y+dy-ey)) < (abs(x-ex) + abs(y-ey)) else ((abs(x+dx-sx) + abs(y+dy-sy)) < abs(x-sx) + abs(y-sy))
-        (dx,dy) = (\(a,b) -> (ceiling . (* (fromIntegral speed)) $ a, (ceiling . (* (fromIntegral speed)) $ b))) . normalize $ (ex-sx,ey-sy)
 move p@(Platform _ _) = p
 
 normalize :: (Int,Int) -> (Float,Float)

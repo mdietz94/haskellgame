@@ -50,7 +50,7 @@ update kS l@(Level lC lev) = if IH.isDown kS SDL.SDLK_LSHIFT then (False,l { lD=
         sObs = (map Platform.bounding $ staticObstacles lC)
         pObs = (map P.bounding $ players lev)
         -- lengthy way to exclude players from hitting themselves
-        newPlayers = [ P.update (if n == playInd then kS else []) (sObs ++ mObs ++ (skip n pObs)) ((players lev)!!n) | n <- [0..((length . players $ lev) - 1)] ]
+        newPlayers = [ P.update (if n == playInd then kS else []) (sObs ++ mObs ++ (skip n pObs)) newObstacles ((players lev)!!n) | n <- [0..((length . players $ lev) - 1)] ]
         mObs = (map Platform.mBounding $ newObstacles)
         newObstacles = map Platform.update (movingObstacles lev)
 
