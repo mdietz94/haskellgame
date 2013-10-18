@@ -26,7 +26,7 @@ updateS kS rects mp = do
     curP <- get
     let (nP,oG) = (moveObjs mp) . (checkCollisionV rects y) $ curP
     put $ (checkCollisionH rects x) . moveH $ nP
-    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(fst . velocity $ p,(snd . velocity $ p) - 10 ) }) else return ()
+    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(fst . velocity $ p,(min 0 (snd . velocity $ p)) - 10 ) }) else return ()
     where
         strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
 
@@ -79,10 +79,11 @@ checkCollisionV (r:rs) origY p@(Player pr@(Rectangle x y w h) (dx,dy) a i)
         else checkCollisionV rs origY p
 
 moveObjs :: [P.Platform] -> (Player,Bool) -> (Player,Bool)
-moveObjs ((P.MoveablePlatform _ _ r (dx',_) _ fwd):rs) (p@(Player rect@(Rectangle x y _ _) _ _ _ ),b)
-    | r `collides` rect { rectY=y+3 } = (p { bounding=newRect },True)
+moveObjs ((P.MoveablePlatform _ _ r (dx',dy') _ fwd):rs) (p@(Player rect@(Rectangle x y _ _) (vx,vy) _ _ ),b)
+    | r `collides` rect { rectY=y+3 } = (p { bounding=newRect, velocity=(vx,dy) },True)
     | otherwise = moveObjs rs (p,b)
         where
             dx = if fwd then dx' else dx'*(-1)
+            dy = if fwd then dy' else dy'*(-1)
             newRect = rect { rectX=x+dx }
 moveObjs _ p = p
