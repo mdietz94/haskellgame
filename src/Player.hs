@@ -26,7 +26,7 @@ updateS kS rects mp = do
     curP <- get
     let (nP,oG) = (moveObjs mp) . (checkCollisionV rects y) $ curP
     put $ (checkCollisionH rects x) . moveH $ nP
-    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(fst . velocity $ p,-10) }) else return ()
+    if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(fst . velocity $ p,(snd . velocity $ p) - 10 ) }) else return ()
     where
         strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
 
