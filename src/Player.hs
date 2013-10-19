@@ -21,14 +21,14 @@ update kS rects mp p = snd $ runState (updateS kS rects mp) p
 updateS :: KeyboardState -> [Shape] -> [P.Platform] -> State Player ()
 updateS kS rects mp = do
     player@(Player (Rectangle x y _ _) (dx,dy) _  _) <- get
-    put player { velocity=(strafe,dy) }
+    put player { velocity=(if strafe == 0 then ((if dx > 0 then floor else ceiling) $ ((fromIntegral dx)*0.9)) else (if dx*strafe > 0 then max (min (dx+strafe) 5) (-5) else strafe),dy) }
     modify moveV
     curP <- get
     let (nP,oG) = (moveObjs mp) . (checkCollisionV rects y) $ curP
     put $ (checkCollisionH rects x) . moveH $ nP
     if oG && (isPressed kS SDLK_UP) then modify (\p -> p { velocity=(fst . velocity $ p,(min 0 (snd . velocity $ p)) - 10 ) }) else return ()
     where
-        strafe = (if isDown kS SDLK_LEFT then -5 else 0) + (if isDown kS SDLK_RIGHT then 5 else 0)
+        strafe = (if isDown kS SDLK_LEFT then -1 else 0) + (if isDown kS SDLK_RIGHT then 1 else 0)
 
 draw :: Surface -> FixedCamera -> Player -> IO ()
 draw screen cam (Player (Rectangle x y _ _)  _ _ image) = do
