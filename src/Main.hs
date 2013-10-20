@@ -51,8 +51,9 @@ putKeyboardState t = modify $ \s -> s { keyboardState = t }
 initEnv :: IO (AppConfig, AppData)
 initEnv = do    
     screen <- G.initialize height width "Best Game Ever"
+    AM.initialize
     (_,keys) <- IH.initialize
-    let level = L.initialize 0
+    level <- L.initialize 0
     fps <- start defaultTimer
     return (AppConfig screen, AppData level keys fps) 
 
@@ -69,7 +70,7 @@ loop = do
     fps <- liftM fps get
     level <- liftM level get
     let (won,nL) = L.update keyState level
-    putLevel (if won then L.initialize ((L.lId . L.lC $ nL) + 1) else nL)
+    if won then liftIO (L.initialize ((L.lId . L.lC $ nL) + 1)) >>= putLevel else putLevel nL
 
     putKeyboardState $ IH.putLastKeyboardState keyState
 

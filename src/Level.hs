@@ -11,14 +11,17 @@ import qualified Base.GraphicsManager as G
 import qualified Base.Camera as C
 import qualified Base.Geometry as Geo
 import qualified Graphics.UI.SDL as SDL
+import Graphics.UI.SDL.Mixer as SDL
 import Config
 import Timer
+import Foreign(touchForeignPtr)
 
 data LevelConfig = LevelConfig {
     lId :: Int,
     startPos :: [(Int,Int)],
     goal :: Geo.Shape,
-    staticObstacles :: [Platform.Platform]
+    staticObstacles :: [Platform.Platform],
+    currMusic :: SDL.Music
 }
 
 data LevelData = LevelData {
@@ -34,8 +37,12 @@ data Level = Level {
     lD :: LevelData
 }
 
-initialize :: Int -> Level
-initialize 0 = Level (LevelConfig 0 sPos (Geo.Rectangle 350 240 20 20) platforms) (LevelData mPlatforms (C.FixedCamera (0,0) height width) (map P.initialize sPos) 0 [])
+initialize :: Int -> IO Level
+initialize 0 = do
+    m <- SDL.loadMUS "../assets/music/Aalborn_Pulse.mp3"
+    let l = Level (LevelConfig 0 sPos (Geo.Rectangle 350 240 20 20) platforms m) (LevelData mPlatforms (C.FixedCamera (0,0) height width) (map P.initialize sPos) 0 [])
+    AM.playMusic m
+    return l
     where
         sPos = [(0,200), (100,200)]
         mPlatforms = [(Platform.moveableInitialize (10,200) (100,250) 30 10 5 (0,0,0) )]
@@ -61,6 +68,8 @@ draw screen (Level lC lev) = do
     sequence $ map (P.draw screen (camera lev)) (players lev)
     sequence $ map (Platform.draw screen (camera lev)) (movingObstacles lev)
     G.drawRect screen (Geo.rectX . goal $ lC, Geo.rectY . goal $ lC) (Geo.rectW . goal $ lC) (Geo.rectH . goal $ lC) (50,100,50)
+    -- Need to tell the GC to not free the music (SDL should really do this)
+    touchForeignPtr . currMusic $ lC
     return ()
 
 -- Helper function
