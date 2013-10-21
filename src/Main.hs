@@ -14,6 +14,7 @@ import qualified Base.AudioManager as AM
 import qualified Base.Camera as C
 import qualified Base.Geometry as Geo
 import qualified Graphics.UI.SDL as SDL
+import qualified Switch as S
 import Timer
 import Config
 
