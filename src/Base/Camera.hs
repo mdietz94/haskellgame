@@ -34,7 +34,7 @@ shapeToScreen fc@(FixedCamera (fx , fy) fw fh) r@(Geo.Rectangle rx ry rw rh) sw 
   | not (((rx' >= 0 && rx' <= sw) || ((rx' + rw' >= 0) && (rx' + rw' <= sw))) &&
          ((ry' >= 0 && ry' <= sh) || ((ry' + rh' >= 0) && (ry' + rh' <= sh)))) = Nothing --none on screen
   | rx' >= 0 && (rx' + rw' <= sw) && ry' >= 0 && (ry' + rh' <= sh) = Just $ Geo.Rectangle rx' ry' rw' rh' --all on screen
-  | otherwise = Nothing --Just $ Geo.Rectangle rx'' ry'' rw'' rh'' --some on screen
+  | otherwise = Just $ Geo.Rectangle rx'' ry'' rw'' rh'' --some on screen
   where
     (rx' , ry') = pointToScreen fc sw sh (rx , ry)  --find the location of the points  
     rw' = lengthToScreen fw fh sw sh rw                 --find length of height and width on screen
@@ -43,7 +43,26 @@ shapeToScreen fc@(FixedCamera (fx , fy) fw fh) r@(Geo.Rectangle rx ry rw rh) sw 
     ry'' = fitYtoScreen ry' sh
     rw'' = fitLengthToScreen rx' rw' fw
     rh'' = fitLengthToScreen ry' rh' fh
-shapeToScreen fc@(FixedCamera (fx , fy) fw fh) _ sw sh = Nothing
+shapeToScreen fc@(FixedCamera (fx , fy) fw fh) l@(Geo.Line (x0 , y0 ) (x1 , y1)) sw sh
+  | (lineIntersects l' st) || (lineIntersects l' sr) || 
+    (lineIntersects l' sb) || (lineIntersects l' sl) || (x0' >= 0 && x0' <= sw) = Just l'
+  | otherwise = Nothing
+  where
+    l' = Geo.Line (x0' , y0') (x1' , y1')
+    st = Geo.Line (0 , 0) (sw , 0)
+    sr = Geo.Line (sw , 0) (sw , sh)
+    sb = Geo.Line (0 , sh) (sw , sh)
+    sl = Geo.Line (0 , 0) (0 , sh)
+    (x0' , y0') = pointToScreen fc sw sh (x0 , y0)
+    (x1' , y1') = pointToScreen fc sw sh (x1 , y1)
+
+lineIntersects :: Geo.Shape -> Geo.Shape -> Bool
+lineIntersects l0@(Geo.Line (x0 , y0) (x0' , y0')) l1@(Geo.Line (x1 , y1) (x1' , y1')) = (dx0 * dy1 - dx1 * dy0) /= 0
+  where
+    dx0 = fromIntegral $ x0' - x0
+    dy0 = fromIntegral $ y0' - y0
+    dx1 = fromIntegral $ x1' - x1
+    dy1 = fromIntegral $ y1' - y1
 
 --Fits a rectangle to the screen. Given rect must be already adjusted to screen.
 fitShapeToScreen :: Geo.Shape -> Width -> Height -> Geo.Shape
