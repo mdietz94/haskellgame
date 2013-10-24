@@ -104,7 +104,10 @@ draw screen (Level lC lev) = do
     sequence $ map (P.draw screen (camera lev)) (players lev)
     sequence $ map (Platform.draw screen (camera lev)) (movingObstacles lev)
     sequence $ map (Switch.draw screen (camera lev)) (holdSwitches lC)
-    G.drawRect screen (Geo.rectX . goal $ lC, Geo.rectY . goal $ lC) (Geo.rectW . goal $ lC) (Geo.rectH . goal $ lC) (50,100,50)
+    let camRect = C.shapeToScreen (camera lev) (goal lC) 640 480
+    case camRect of
+    	Just r -> G.drawRect screen (Geo.rectX r, Geo.rectY r) (Geo.rectW r) (Geo.rectH r) (50,100,50)
+    	Nothing -> return ()
     -- Need to tell the GC to not free the music (SDL should really do this)
     touchForeignPtr . currMusic $ lC
     return ()
