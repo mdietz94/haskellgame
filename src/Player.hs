@@ -33,10 +33,10 @@ updateS kS rects mp = do
 draw :: Surface -> FixedCamera -> Player -> IO ()
 draw screen cam (Player (Rectangle x y _ _)  _ _ image) = do
     img <- image
-    let pt = gameToScreen cam 640 480 (x,y)
+    let pt = shapeToScreen cam (Point x y) 640 480
     case pt of
-        Just x' -> do
-            drawImage screen img x'
+        Just (Point x' y') -> do
+            drawImage screen img (x' , y')
         Nothing -> return True
     return ()
 

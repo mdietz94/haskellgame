@@ -34,18 +34,16 @@ update :: Platform -> Platform
 update = move
 
 draw :: Surface -> FixedCamera -> Platform -> IO ()
-draw screen cam (Platform (Rectangle x y w h)  color) = do
-    let pt = gameToScreen cam 640 480 (x,y)
-    let wh = gameToScreen cam 640 480 (w,h)
-    case (pt,wh) of
-        (Just x', Just (w',h')) -> drawRect screen x' w' h' color
+draw screen cam (Platform rect color) = do
+    let rect' = shapeToScreen cam rect 640 480
+    case rect' of
+        Just (Rectangle x' y' w' h') -> drawRect screen (x' , y') w' h' color
         _ -> return ()
     return ()
-draw screen cam (MoveablePlatform _ _ (Rectangle x y w h) _ color _) = do
-    let pt = gameToScreen cam 640 480 (x,y)
-    let wh = gameToScreen cam 640 480 (w,h)
-    case (pt,wh) of
-        (Just x', Just (w',h')) -> drawRect screen x' w' h' color
+draw screen cam (MoveablePlatform _ _ rect _ color _) = do
+    let rect' = shapeToScreen cam rect 640 480
+    case rect' of
+        Just (Rectangle x' y' w' h') -> drawRect screen (x' , y') w' h' color
         _ -> return ()
     return ()
 
