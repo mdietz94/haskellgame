@@ -98,7 +98,7 @@ lengthToScreen fw fh sw sh l = ceiling (l' * (fh' / sh' * fw' / sw'))
 --Move fixed camera
 fixedCamMoveTo :: FixedCamera -> Point -> Width -> Height -> FixedCamera
 fixedCamMoveTo (FixedCamera (fx , fy) fw fh) (x , y) gw gh
-  | fx' >= 0 && fx1' <= gw && fy' >= 0 && fy1' <= sh = FixedCamera (fx' , fy') fw fh  --stays
+  | fx' >= 0 && fx1' <= gw && fy' >= 0 && fy1' <= gh = FixedCamera (fx' , fy') fw fh  --stays
   | fx' < 0 && fy' < 0 = FixedCamera (0 , 0) fw fh                            --top left
   | fx' < 0 && fy1' <= gh = FixedCamera (0 , fy') fw fh                       --left
   | fx' < 0 && fy1' > gh = FixedCamera (0 , gh - fh) fw fh                    --bottom left
