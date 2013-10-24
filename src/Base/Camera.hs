@@ -94,7 +94,31 @@ lengthToScreen fw fh sw sh l = ceiling (l' * (fh' / sh' * fw' / sw'))
     sw' = fromIntegral sw :: Float
     fh' = fromIntegral fh :: Float
     sh' = fromIntegral sh :: Float
+
+--Move fixed camera
+fixedCamMoveTo :: FixedCamera -> Point -> Width -> Height -> FixedCamera
+fixedCamMoveTo (FixedCamera (fx , fy) fw fh) (x , y) gw gh
+  | fx' >= 0 && fx1' <= gw && fy' >= 0 && fy1' <= sh = FixedCamera (fx' , fy') fw fh  --stays
+  | fx' < 0 && fy' < 0 = FixedCamera (0 , 0) fw fh                            --top left
+  | fx' < 0 && fy1' <= gh = FixedCamera (0 , fy') fw fh                       --left
+  | fx' < 0 && fy1' > gh = FixedCamera (0 , gh - fh) fw fh                    --bottom left
+  | fx1' <= gw && fy' < 0 = FixedCamera (fx' , 0) fw fh                       --top
+  | fx1' <= gw && fy1' > gh = FixedCamera (fx' , gh - fh) fw fh               --bottom
+  | fx1' > gw && fy1'> gh = FixedCamera (gw - fw , gh - fh) fw fh             --bottom right
+  where
+    fx' = fx + x
+    fx1' = fx + fw + x
+    fy' = fy + y
+    fy1' = fy + fh + y
+
+
 {-
+data ChaseCamera = ChaseCamera {chaseCamCorner :: Point, chaseCamWidth :: Width , chaseCamHeight :: Height , fixCam :: FixedCamera}
+
+
+
+
+
 --Finds the length a line must be so it does not go off edge of screen.
 --Takes a x|y coordinate, a length, and a camera dimension
 fitLineToScreen :: Int -> Int -> Int -> Int
@@ -153,24 +177,6 @@ fitLineOnScreen l@(Geo.Line (x0 , y0) (x1 , y1)) sw sh
     intersectT = intersection (Geo.Line (0 , 0) (sw , 0)) l
     intersectR = intersection (Geo.Line (sw , 0) (sw , sh)) l
     intersectB = intersection (Geo.Line (sw , sh) (0 , sh)) l
-
-
-    
-
---Translates any shape from Base.Geometry to screen
-shapeToScreen :: FixedCamera -> Geo.Shape -> Int -> Int -> Geo.Shape
-shapeToScreen fc@(FixedCamera (fx , fy) fw fh) r@(Geo.Rectangle rx ry rw rh) sw sh = Geo.Rectangle rx' ry' rw' rh'
-  where
-    (rx' , ry') = gameToScreen fc sw sh (rx , rh)  --find the location of the points  
-    rw' = lengthToScreen fw sw rw                 --find length of height and width on screen
-    rh' = lengthToScreen fh sh rh
-    rw'' = fitLineToScreen rx' rw' fw
-    rh'' = fitLineToScreen ry' rh' fh
-shapeToScreen fc@(FixedCamera (fx , fy) fw fh) l@(Geo.Line (x0 , y0) (x1 , y1)) sw sh = Geo.Line (x0' , y0') (x1' , y1')
-  where
-    
-shapeToScreen fc@(FixedCamera (fx , fy) fw fh) _ sw sh = undefined
-
 --Translates a point from the screen to the board
 screenToGame :: FixedCamera -> Int -> Int -> (Int , Int) -> (Int , Int)
 screenToGame fc@(FixedCamera (fx , fy) fw fh) sw sh (gx , gy) = (ceiling x' , ceiling y')
@@ -206,7 +212,6 @@ moveFixedCamY fc@(FixedCamera (fx , fy) fw fh) y gh
   | otherwise = FixedCamera (fx , fy + y) fw fh
 
 
-data ChaseCamera = ChaseCamera {chaseCamCorner :: Point, chaseCamWidth :: Width , chaseCamHeight :: Height , fixCam :: FixedCamera}
 
 
 
