@@ -3,7 +3,7 @@ module Switch where
 import Graphics.UI.SDL(Surface)
 import Base.GraphicsManager(drawRect)
 import Base.Geometry(Shape(Rectangle),collides)
-import Base.Camera(FixedCamera,gameToScreen)
+import Base.Camera(FixedCamera,shapeToScreen)
 import Player(Player,bounding)
 
 
@@ -20,17 +20,15 @@ update lD players t@(Hold r on off) = if (null . filter (==True) . map ((collide
 
 
 draw :: Surface -> FixedCamera -> Switch a -> IO ()
-draw screen cam (Tap (Rectangle x y w h) _ _ _) = do
-    let pt = gameToScreen cam 640 480 (x,y)
-    let wh = gameToScreen cam 640 480 (w,h)
-    case (pt,wh) of
-        (Just x', Just (w',h')) -> drawRect screen x' w' h' (100,10,10)
+draw screen cam (Tap rect@(Rectangle x y w h) _ _ _) = do
+    let rect' = shapeToScreen cam rect 640 480
+    case rect' of
+        Just (Rectangle x' y' w' h') -> drawRect screen (x' , y') w' h' (100,10,10)
         _ -> return ()
     return ()
-draw screen cam (Hold (Rectangle x y w h) _ _) = do
-    let pt = gameToScreen cam 640 480 (x,y)
-    let wh = gameToScreen cam 640 480 (w,h)
-    case (pt,wh) of
-        (Just x', Just (w',h')) -> drawRect screen x' w' h' (100,10,10)
+draw screen cam (Hold rect@(Rectangle x y w h) _ _) = do
+    let rect' = shapeToScreen cam rect 640 480
+    case rect' of
+        Just (Rectangle x' y' w' h') -> drawRect screen (x' , y') w' h' (100,10,10)
         _ -> return ()
     return ()
