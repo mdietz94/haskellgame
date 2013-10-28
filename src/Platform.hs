@@ -3,7 +3,7 @@
 module Platform where
 
 import Base.GraphicsManager (drawRect)
-import Base.Geometry (Shape(..),collides,rectX,rectY)
+import Base.Geometry (Shape(..),collides,x,y)
 import Base.Camera
 import Graphics.UI.SDL (Surface)
 import Control.Lens
@@ -60,11 +60,13 @@ draw screen cam (MoveablePlatform _ _ rect _ color _) = do
     return ()
 
 move :: Platform -> Platform
-move mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) (dx,dy) _ forward ) = (bounding .~ newRect) . (forwards .~ fwd) $ mp
+move mp@(MoveablePlatform (sx,sy) (ex,ey) _ (dx,dy) _ forward ) = (bounding .~ newRect) . (forwards .~ fwd) $ mp
     where
-        newRect = ( rectX .~ (mp^.bounding.rectX + dx') ) . ( rectY .~ (mp^.bounding.rectY + dy') ) $ mp^.bounding
+        newRect = ( x .~ (mp^.bounding.x + dx') ) . ( y .~ (mp^.bounding.y + dy') ) $ mp^.bounding
         (dx',dy') = both *~ (if fwd then 1 else (-1)) $ mp^.vel
-        fwd = if mp^.forwards then (abs(x+dx-ex) + abs(y+dy-ey)) < (abs(x-ex) + abs(y-ey)) else ((abs(x+dx-sx) + abs(y+dy-sy)) < abs(x-sx) + abs(y-sy))
+        fwd = if mp^.forwards
+            then (abs(mp^.bounding.x+dx-ex) + abs(mp^.bounding.y+dy-ey)) < (abs(mp^.bounding.x-ex) + abs(mp^.bounding.y-ey))
+            else ((abs(mp^.bounding.x+dx-sx) + abs(mp^.bounding.y+dy-sy)) < abs(mp^.bounding.x-sx) + abs(mp^.bounding.y-sy))
 move p@(Platform _ _) = p
 
 normalize :: (Int,Int) -> (Float,Float)

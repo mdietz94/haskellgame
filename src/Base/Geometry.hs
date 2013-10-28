@@ -7,17 +7,46 @@ import Control.Lens
 data Shape = Rectangle { _rectX :: Int, _rectY :: Int, _rectW :: Int, _rectH :: Int } | Line { _start :: (Int,Int), _end :: (Int,Int) }
 	| Point { _ptX :: Int, _ptY :: Int } deriving (Eq,Show)
 
-rectX :: Lens' Shape Int
-rectX = lens _rectX (\shape v -> shape { _rectX = v })
 
-rectY :: Lens' Shape Int
-rectY = lens _rectY (\shape v -> shape { _rectY = v })
+x :: Lens' Shape Int
+x = lens getX setX
+    where
+        getX (Rectangle x _ _ _) = x
+        getX (Point x _) = x
+        getX (Line (x,_) _) = x
+        setX (Rectangle x y z w) x' = (Rectangle x' y z w)
+        setX (Point x y) x' = (Point x' y)
+        setX (Line (x,y) e) x' = (Line (x',y) e)
 
-rectW :: Lens' Shape Int
-rectW = lens _rectW (\shape v -> shape { _rectW = v })
 
-rectH :: Lens' Shape Int
-rectH = lens _rectH (\shape v -> shape { _rectH = v })
+y :: Lens' Shape Int
+y = lens getY setY
+	where
+		getY (Rectangle _ y _ _) = y
+		getY (Point _ y) = y
+		getY (Line (_,y) _) = y
+		setY (Rectangle x y z w) y' = (Rectangle x y' z w)
+		setY (Point x y) y' = (Point x y')
+
+width :: Lens' Shape Int
+width = lens getW setW
+	where
+		getW (Rectangle _ _ w _) = w
+		getW (Line (x1,_) (x2,_)) = abs(x1-x2)
+		getW (Point _ _) = 1
+		setW (Rectangle x y w h) w' = (Rectangle x y w' h)
+		setW (Line s e) _ = (Line s e)
+		setW (Point x y) _ = (Point x y)
+
+height :: Lens' Shape Int
+height = lens getH setH
+	where
+		getH (Rectangle _ _ _ h) = h
+		getH (Line (_,y1) (_,y2)) = abs(y1-y2)
+		getH (Point _ _) = 1
+		setH (Rectangle x y w h) h' = (Rectangle x y w h')
+		setH (Line s e) _ = (Line s e)
+		setH (Point x y) _ = (Point x y)
 
 collides :: Shape -> Shape -> Bool
 collides (Rectangle x y w h) (Rectangle x1 y1 w1 h1) = (inRange x w x1 w1) && (inRange y h y1 h1)
