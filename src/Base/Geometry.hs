@@ -1,7 +1,23 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Base.Geometry where
 
-data Shape = Rectangle { rectX :: Int, rectY :: Int, rectW :: Int, rectH :: Int } | Line { start :: (Int,Int), end :: (Int,Int) }
-	| Point { ptX :: Int, ptY :: Int } deriving (Eq,Show)
+import Control.Lens
+
+data Shape = Rectangle { _rectX :: Int, _rectY :: Int, _rectW :: Int, _rectH :: Int } | Line { _start :: (Int,Int), _end :: (Int,Int) }
+	| Point { _ptX :: Int, _ptY :: Int } deriving (Eq,Show)
+
+rectX :: Lens' Shape Int
+rectX = lens _rectX (\shape v -> shape { _rectX = v })
+
+rectY :: Lens' Shape Int
+rectY = lens _rectY (\shape v -> shape { _rectY = v })
+
+rectW :: Lens' Shape Int
+rectW = lens _rectW (\shape v -> shape { _rectW = v })
+
+rectH :: Lens' Shape Int
+rectH = lens _rectH (\shape v -> shape { _rectH = v })
 
 collides :: Shape -> Shape -> Bool
 collides (Rectangle x y w h) (Rectangle x1 y1 w1 h1) = (inRange x w x1 w1) && (inRange y h y1 h1)

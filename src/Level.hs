@@ -16,6 +16,7 @@ import Graphics.UI.SDL.Mixer as SDL
 import Config
 import Timer
 import Foreign(touchForeignPtr)
+import Control.Lens((^.))
 
 data LevelConfig = LevelConfig {
     lId :: Int,
@@ -80,9 +81,9 @@ updateS kS lC = do
         else do
             obs <- gets $ (map Platform.update) . movingObstacles
             modify $ \s -> s { movingObstacles=obs }
-            let mObs = map Platform.mBounding obs
-            let sObs = (map Platform.bounding) . staticObstacles $ lC
-            pObs <- gets $ (map P.bounding) . players
+            let mObs = map Platform._bounding obs
+            let sObs = (map Platform._bounding) . staticObstacles $ lC
+            pObs <- gets $ (map P._bounding) . players
             pls <- gets players
             currP <- gets curPlayer
             let playInd = max 0 (min (currP + (if IH.isDown kS SDL.SDLK_q then (-1) else 0) + (if IH.isDown kS SDL.SDLK_e then 1 else 0)) ((length pls) - 1))
@@ -106,7 +107,7 @@ draw screen (Level lC lev) = do
     sequence $ map (Switch.draw screen (camera lev)) (holdSwitches lC)
     let camRect = C.shapeToScreen (camera lev) (goal lC) 640 480
     case camRect of
-    	Just r -> G.drawRect screen (Geo.rectX r, Geo.rectY r) (Geo.rectW r) (Geo.rectH r) (50,100,50)
+    	Just r -> G.drawRect screen (r^.Geo.rectX,r^.Geo.rectY) (r^.Geo.rectW) (r^.Geo.rectH) (50,100,50)
     	Nothing -> return ()
     -- Need to tell the GC to not free the music (SDL should really do this)
     touchForeignPtr . currMusic $ lC

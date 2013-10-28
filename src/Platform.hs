@@ -1,20 +1,32 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Platform where
 
 import Base.GraphicsManager (drawRect)
-import Base.Geometry (Shape(..),collides)
+import Base.Geometry (Shape(..),collides,rectX,rectY)
 import Base.Camera
 import Graphics.UI.SDL (Surface)
+import Control.Lens
 
 data Platform =
-	Platform { bounding :: Shape, color :: (Int,Int,Int) } |
+	Platform { _bounding :: Shape, color :: (Int,Int,Int) } |
 	MoveablePlatform {
 		start :: (Int,Int),
 		end :: (Int,Int),
-		mBounding :: Shape,
-		vel :: (Int,Int),
+		_bounding :: Shape,
+		_vel :: (Int,Int),
 		mColor :: (Int,Int,Int),
-		forwards :: Bool
+		_forwards :: Bool
 	} deriving Show
+
+vel :: Lens' Platform (Int,Int)
+vel = lens _vel (\shape v -> shape { _vel = v })
+
+bounding :: Lens' Platform Shape
+bounding = lens _bounding (\shape v -> shape { _bounding = v })
+
+forwards :: Lens' Platform Bool
+forwards = lens _forwards (\shape v -> shape { _forwards = v })
 
 moveableInitialize :: (Int,Int) -> (Int,Int) -> Int -> Int -> Int -> (Int,Int,Int) -> Platform
 moveableInitialize start@(x,y) end@(ex,ey) width height speed color = MoveablePlatform start end (Rectangle x y width height) (dx,dy) color True
@@ -48,11 +60,11 @@ draw screen cam (MoveablePlatform _ _ rect _ color _) = do
     return ()
 
 move :: Platform -> Platform
-move mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) (dx,dy) _ forward ) = mp { mBounding=newRect, forwards=fwd }
+move mp@(MoveablePlatform (sx,sy) (ex,ey) (Rectangle x y _ _) (dx,dy) _ forward ) = (bounding .~ newRect) . (forwards .~ fwd) $ mp
     where
-        newRect = (mBounding mp) { rectX=x+dx', rectY=y+dy' }
-        (dx',dy') = (dx * (if fwd then 1 else (-1)), dy * (if fwd then 1 else (-1)))
-        fwd = if forward then (abs(x+dx-ex) + abs(y+dy-ey)) < (abs(x-ex) + abs(y-ey)) else ((abs(x+dx-sx) + abs(y+dy-sy)) < abs(x-sx) + abs(y-sy))
+        newRect = ( rectX .~ (mp^.bounding.rectX + dx') ) . ( rectY .~ (mp^.bounding.rectY + dy') ) $ mp^.bounding
+        (dx',dy') = both *~ (if fwd then 1 else (-1)) $ mp^.vel
+        fwd = if mp^.forwards then (abs(x+dx-ex) + abs(y+dy-ey)) < (abs(x-ex) + abs(y-ey)) else ((abs(x+dx-sx) + abs(y+dy-sy)) < abs(x-sx) + abs(y-sy))
 move p@(Platform _ _) = p
 
 normalize :: (Int,Int) -> (Float,Float)
