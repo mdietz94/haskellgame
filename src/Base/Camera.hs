@@ -70,3 +70,6 @@ fixedCamMoveTo (FixedCamera (fx , fy) fw fh) (x , y) gw gh
     fx1' = fx + fw + x
     fy' = fy + y
     fy1' = fy + fh + y
+
+
+data ChaseCamera = ChaseCamera {chaseCamCorner :: Point, chaseCamWidth :: Width , chaseCamHeight :: Height , fixCam :: FixedCamera}
